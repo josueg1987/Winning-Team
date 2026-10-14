@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Winning Team">
+<link rel="icon" type="image/svg+xml" href="icon.svg"><link rel="apple-touch-icon" href="icon.png">
+<title>Winning Team</title>
+<style>
+:root{--bg:#f4f1ea;--card:#fff;--tx:#1d2433;--mu:#6b7385;--ac:#e8590c;--ok:#2b8a3e;--bad:#c92a2a;--bd:#e3ded2}
+@media(prefers-color-scheme:dark){:root{--bg:#12161f;--card:#1b2130;--tx:#eef1f7;--mu:#98a2b8;--bd:#2a3246}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;padding:env(safe-area-inset-top,0px) 0 calc(84px + env(safe-area-inset-bottom,0px))}
+h2{font-size:14px;margin:18px 0 8px;color:var(--mu);text-transform:uppercase;letter-spacing:.05em}
+header{padding:14px 16px 4px;display:flex;justify-content:space-between;align-items:center}header b{font-size:20px}
+main{padding:0 14px;max-width:560px;margin:auto}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;margin:8px 0}
+.r{display:flex;align-items:center;gap:10px}.sp{justify-content:space-between}.g{flex:1;min-width:0}
+.mu{color:var(--mu);font-size:13px}.b{font-weight:700}
+button{font:inherit;border:0;border-radius:10px;padding:9px 13px;background:var(--ac);color:#fff;font-weight:600}
+button.s{background:var(--bd);color:var(--tx)}button.ok{background:var(--ok)}button.no{background:var(--bad)}button:disabled{opacity:.45}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px))}
+nav button{flex:1;background:none;color:var(--mu);font-size:11px;padding:6px 2px}nav button.on{color:var(--ac)}nav i{display:block;font-size:20px;font-style:normal}
+input,textarea,select{font:inherit;width:100%;padding:9px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);margin:4px 0}
+.ph{width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px}
+.tag{font-size:12px;padding:2px 8px;border-radius:20px;background:var(--bd)}.tag.approved{background:var(--ok);color:#fff}.tag.rejected{background:var(--bad);color:#fff}.tag.pending{background:#f59f00;color:#222}
+.w{display:flex;gap:6px}.w>*{flex:1}
+#ts{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;background:#222;color:#fff;padding:9px 14px;border-radius:20px;font-size:14px;display:none;z-index:9;max-width:90%}
+</style></head><body>
+<header><b><svg width="26" height="28" viewBox="18 18 64 68" style="vertical-align:-6px;margin-right:6px" aria-hidden="true"><path d="M30 20H70V40C70 56 60 64 50 64C40 64 30 56 30 40Z" fill="#e8590c"/><path d="M30 26H20C20 40 26 46 32 47M70 26H80C80 40 74 46 68 47" fill="none" stroke="#0b7285" stroke-width="5"/><rect x="46" y="64" width="8" height="12" fill="#0b7285"/><rect x="34" y="76" width="32" height="8" rx="3" fill="#0b7285"/><polygon points="50,29 52.1,35.1 58.6,35.2 53.4,39.1 55.3,45.3 50,41.6 44.7,45.3 46.6,39.1 41.4,35.2 47.9,35.1" fill="#f4f1ea"/></svg>Winning Team</b><span id="hd"></span></header>
+<main id="v"></main>
+<input type="file" id="f" accept="image/*" capture="environment" hidden onchange="A.file(event)">
+<div id="ts"></div><nav id="nv"></nav>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+const SB_URL='https://bjfqbrquqrnrplkiiakh.supabase.co',SB_KEY='sb_publishable_VWSBfDlTtSGAjOBG_Xj8Sg_ZqBm88rU';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const slug=s=>String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+let U=null,ME=null,CO=null,MB=[],TK=[],SUB=[],RW=[],RED=[],T='h',PT=null,LB=null,LP='',D={n:'',t:''},PEND=0,BUSY=0,URLS={};
+const toast=t=>{const e=$('#ts');e.textContent=t;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',3200)};
+const shrink=f=>new Promise(r=>{const i=new Image,u=URL.createObjectURL(f);i.onload=()=>{const s=Math.min(1,800/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*s;c.height=i.height*s;c.getContext('2d').drawImage(i,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(r,'image/jpeg',.7)};i.onerror=()=>r(null);i.src=u});
+const pk=(f,d=new Date())=>{const y=d.getFullYear(),m=d.getMonth()+1,n=d.getDate();if(f=='m')return y+'-'+m;if(f=='d')return y+'-'+m+'-'+n;const x=new Date(y,m-1,n);x.setDate(n-((x.getDay()+6)%7));return'w'+x.getFullYear()+'-'+(x.getMonth()+1)+'-'+x.getDate()};
+const mk=s=>pk('m',new Date(s));
+const FN={d:'Diaria',w:'Semanal',m:'Mensual'},MS=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'],KI={dinero:'💵',tiempo:'🕒',regalo:'🎁',otro:'⭐'},RL={member:'Colaborador',supervisor:'Supervisor',admin:'Administrador'};
+const staff=()=>MB.filter(m=>m.role=='member');
+const mem=id=>MB.find(m=>m.id==id)||{name:'?'};
+const ap=id=>SUB.filter(s=>s.member_id==id&&s.status=='approved');
+const dm=s=>mk(s.decided_at||s.created_at);
+const mon=(id,m=mk(Date.now()))=>ap(id).filter(s=>dm(s)==m).reduce((a,s)=>a+s.points,0);
+const bal=id=>mon(id)-RED.filter(r=>r.member_id==id&&r.status!='rejected'&&mk(r.created_at)==mk(Date.now())).reduce((a,r)=>a+r.cost,0);
+const lem=(id,m=mk(Date.now()))=>ap(id).filter(s=>dm(s)==m).reduce((a,s)=>a+s.lempiras,0);
+const streak=id=>{const ds=new Set(ap(id).map(s=>pk('d',new Date(s.created_at))));let n=0,d=new Date();if(!ds.has(pk('d',d)))d.setDate(d.getDate()-1);while(ds.has(pk('d',d))){n++;d.setDate(d.getDate()-1)}return n};
+const stT=s=>`<span class="tag ${s}">${{pending:'En revisión',approved:'Aprobada ✓',rejected:'Rechazada'}[s]}</span>`;
+const rdT=s=>`<span class="tag ${s=='delivered'?'approved':s}">${{pending:'Pendiente',delivered:'Entregado ✓',rejected:'Rechazado'}[s]}</span>`;
+const F=(l,h)=>`<div class="g"><div class="mu">${l}</div>${h}</div>`;
+const TABS={member:[['h','🏠','Inicio'],['t','✅','Actividades'],['l','🖼️','Landings'],['c','🎁','Canjear'],['r','📅','Historial']],supervisor:[['h','🏠','Inicio'],['a','🔑','Aprobar'],['r','📅','Historial']],admin:[['h','🏠','Inicio'],['a','🔑','Aprobar'],['m','⚙️','Admin'],['r','📅','Historial']]};
+/* datos */
+async function load(){
+ const {data:{session}}=await sb.auth.getSession();U=session?session.user:null;
+ if(!U){ME=CO=null;MB=[];TK=[];SUB=[];RW=[];RED=[];return R(1)}
+ const [m,c,k,s,w,r]=await Promise.all([sb.from('members').select('*').order('name'),sb.from('companies').select('*'),sb.from('tasks').select('*').order('freq').order('name'),sb.from('submissions').select('*').order('created_at',{ascending:false}).limit(1000),sb.from('rewards').select('*').order('cost'),sb.from('redemptions').select('*').order('created_at',{ascending:false})]);
+ MB=m.data||[];ME=MB.find(x=>x.user_id==U.id);CO=(c.data||[])[0];TK=k.data||[];SUB=s.data||[];RW=w.data||[];RED=r.data||[];
+ R();
+}
+const msg=e=>{const m=(e&&e.message)||String(e);return/Invalid login/i.test(m)?'Código, nombre o clave incorrectos':/already registered/i.test(m)?'Ese nombre ya existe en esa empresa':m};
+const A={
+tab(t){T=t;R(1)},
+em(){const c=slug($('#lc').value),n=slug($('#ln').value),p=$('#lp').value;if(c.length<8)return toast('El código debe tener 8 o más letras/números'),null;if(!n)return toast('Escriba su nombre'),null;if(p.length<6)return toast('La clave debe tener 6 o más caracteres'),null;return{email:n+'.'+c+'@wtclick.app',password:p,c,name:$('#ln').value.trim()}},
+async login(){const e=A.em();if(!e)return;const r=await sb.auth.signInWithPassword({email:e.email,password:e.password});if(r.error)return toast(msg(r.error));load()},
+async reg(mode){const e=A.em();if(!e)return;let r=await sb.auth.signUp({email:e.email,password:e.password});if(r.error||!r.data.session){r=await sb.auth.signInWithPassword({email:e.email,password:e.password});if(r.error)return toast(msg(r.error))}
+ const x=mode=='c'?await sb.rpc('create_company',{p_code:e.c,p_name:'Click Honduras',p_member:e.name}):await sb.rpc('join_company',{p_code:e.c,p_member:e.name});
+ if(x.error&&!/Ya pertenece/.test(x.error.message))return toast(msg(x.error));load()},
+async out(){try{await sb.auth.signOut({scope:'local'})}catch(e){}try{Object.keys(localStorage).filter(k=>k.startsWith('sb-')).forEach(k=>localStorage.removeItem(k))}catch(e){}U=ME=CO=null;MB=[];TK=[];SUB=[];RW=[];RED=[];T='h';R(1)},
+pick(id){PT=id;$('#f').click()},
+async file(ev){const f=ev.target.files[0];ev.target.value='';if(!f)return;const b=await shrink(f);if(!b)return toast('No se pudo leer la foto');
+ if(T=='l'){LB=b;LP=URL.createObjectURL(b);R(1)}else if(PT){const id=PT;PT=null;A.send({kind:'task',task_id:id,period_key:pk(TK.find(t=>t.id==id).freq)},b)}},
+async send(o,b){if(BUSY)return;BUSY=1;try{const id=crypto.randomUUID();const u=await sb.storage.from('evidence').upload(CO.id+'/'+id+'.jpg',b,{contentType:'image/jpeg'});if(u.error)throw u.error;
+ const r=await sb.from('submissions').insert({id,company_id:CO.id,member_id:ME.id,...o});if(r.error)throw r.error;toast('Enviado a revisión ✓');return 1}catch(e){toast('No se pudo enviar: '+msg(e))}finally{BUSY=0;load()}},
+async land(){const n=D.n.trim(),t=D.t.trim();if(!n||!t||!LB)return;if(await A.send({kind:'landing',name:n,body:t},LB)){LB=null;LP='';D={n:'',t:''}}},
+async dec(id,ok){const r=await sb.from('submissions').update({status:ok?'approved':'rejected',decided_at:new Date().toISOString()}).eq('id',id);if(r.error)toast(msg(r.error));load()},
+async redeem(id){const w=RW.find(x=>x.id==id);if(!confirm('¿Canjear "'+w.name+'" por '+w.cost+' puntos?'))return;const r=await sb.from('redemptions').insert({company_id:CO.id,member_id:ME.id,reward_id:id});if(r.error)toast(msg(r.error));else toast('Canje solicitado ✓');load()},
+async rd(id,ok){const r=await sb.from('redemptions').update({status:ok?'delivered':'rejected',decided_at:new Date().toISOString()}).eq('id',id);if(r.error)toast(msg(r.error));load()},
+async up(t,id,o){const r=await sb.from(t).update(o).eq('id',id);if(r.error)toast(msg(r.error));load()},
+async del(t,id){if(!confirm('¿Eliminar?'))return;const r=await sb.from(t).delete().eq('id',id);if(r.error)toast(msg(r.error));load()},
+async delM(id){if(!confirm('¿Quitar a '+mem(id).name+' y borrar su cuenta?'))return;const r=await sb.rpc('delete_member',{p_id:id});if(r.error)toast(msg(r.error));else toast('Miembro eliminado');load()},
+async addT(){const n=$('#tn').value.trim();if(!n)return;const r=await sb.from('tasks').insert({company_id:CO.id,name:n,freq:$('#tf').value,points:parseInt($('#tp').value)||1});if(r.error)toast(msg(r.error));load()},
+async addR(){const n=$('#rn').value.trim();if(!n)return;const l=$('#rl').value;const r=await sb.from('rewards').insert({company_id:CO.id,name:n,kind:$('#rk').value,cost:parseInt($('#rc').value)||100,amount:parseInt($('#ra').value)||0,monthly_limit:l===''?null:parseInt(l)});if(r.error)toast(msg(r.error));load()}
+};
+/* vistas */
+function login(){return`<div class="c"><div class="b">Entrar a Winning Team</div>
+<input id="lc" placeholder="Código de la empresa (8 o más letras/números)" autocapitalize="none" autocomplete="off"><input id="ln" placeholder="Su nombre" autocomplete="off"><input id="lp" type="password" placeholder="Clave (6 o más caracteres)">
+<button style="width:100%;margin-top:6px" onclick="A.login()">Entrar</button></div>
+<div class="c"><div class="mu">Primera vez</div><div class="w" style="margin-top:6px"><button class="s" onclick="A.reg('c')">Crear empresa (administrador)</button><button class="s" onclick="A.reg('j')">Unirme (colaborador)</button></div>
+<div class="mu" style="margin-top:8px">El administrador inventa el código de la empresa y lo comparte solo con sus colaboradores. Cada persona usa el mismo código, su nombre y su propia clave.</div></div>`}
+function home(){
+ const st=staff(),rk=[...st].sort((a,b)=>mon(b.id)-mon(a.id)),mo=mk(Date.now());let h='';
+ if(ME.role=='member')h+=`<div class="c"><div class="mu">Mis puntos disponibles este mes</div><div style="font-size:38px;font-weight:800;color:var(--ac)">${bal(ME.id)}</div><div class="mu">🔥 ${streak(ME.id)} días seguidos${lem(ME.id)?' · Landings este mes: L'+lem(ME.id):''}<br>Se reinician el día 1; el historial queda en la pestaña Historial.</div></div>`;
+ h+='<h2>Ranking del mes</h2><div class="c">';if(!rk.length)h+='<div class="mu">Aún no hay colaboradores.</div>';
+ rk.forEach((m,i)=>h+=`<div class="r sp" style="padding:4px 0"><span>${['🥇','🥈','🥉'][i]||'·'} ${esc(m.name)}${m.team?` <span class="mu">${esc(m.team)}</span>`:''}</span><b>${mon(m.id)} pts</b></div>`);h+='</div>';
+ const tm={};st.forEach(m=>{const t=(m.team||'').trim();if(t)tm[t]=(tm[t]||0)+mon(m.id)});const te=Object.entries(tm).sort((a,b)=>b[1]-a[1]);
+ if(te.length){h+='<h2>Equipos</h2><div class="c">';te.forEach((x,i)=>h+=`<div class="r sp" style="padding:4px 0"><span>${['🥇','🥈','🥉'][i]||'·'} ${esc(x[0])}</span><b>${x[1]} pts</b></div>`);h+='</div>'}
+ const ms=[...new Set(SUB.filter(s=>s.status=='approved').map(dm))].filter(x=>x!=mo).slice(0,4);
+ if(ms.length&&st.length){h+='<h2>Campeones de meses anteriores</h2><div class="c">';ms.forEach(x=>{const w=[...st].sort((a,b)=>mon(b.id,x)-mon(a.id,x))[0],[y,n]=x.split('-');h+=`<div class="r sp" style="padding:3px 0"><span>${MS[n-1]} ${y}</span><span>🏆 ${esc(w.name)} (${mon(w.id,x)})</span></div>`});h+='</div>'}
+ return h}
+function tasks(){let h='';
+ ['d','w','m'].forEach(f=>{const l=TK.filter(t=>t.freq==f);if(!l.length)return;h+=`<h2>${FN[f]}s</h2>`;
+  l.forEach(t=>{const d=SUB.find(s=>s.kind=='task'&&s.member_id==ME.id&&s.task_id==t.id&&s.period_key==pk(t.freq)&&s.status!='rejected');
+   h+=`<div class="c r"><div class="g"><div class="b">${esc(t.name)}</div><div class="mu">${t.points} pts</div></div>${d?stT(d.status):`<button onclick="A.pick('${t.id}')">📷 Hecho</button>`}</div>`})});
+ return h||'<div class="c mu">El administrador aún no ha creado actividades.</div>'}
+function landings(){const L=SUB.filter(s=>s.kind=='landing'&&s.member_id==ME.id);
+ let h=`<div class="c"><div class="b">Nueva landing · L${CO.landing_lempiras} · ${CO.landing_pts} pts</div>
+ <input placeholder="Producto o nombre de la landing" value="${esc(D.n)}" oninput="D.n=this.value"><textarea rows="4" placeholder="Texto de la landing" oninput="D.t=this.value">${esc(D.t)}</textarea>${LP?`<img class="ph" src="${LP}">`:''}
+ <div class="w" style="margin-top:6px"><button class="s" onclick="$('#f').click()">${LB?'✓ Imagen lista (cambiar)':'📷 Agregar imagen'}</button><button onclick="A.land()" ${LB?'':'disabled'}>Enviar</button></div></div>`;
+ if(L.length)h+='<h2>Mis landings</h2>';
+ L.forEach(s=>h+=`<div class="c"><div class="r sp"><span class="b">${esc(s.name)}</span>${stT(s.status)}</div><div class="mu">${new Date(s.created_at).toLocaleDateString()} · L${s.lempiras}</div><div>${esc(s.body)}</div><img class="ph" data-p="${s.company_id}/${s.id}.jpg"></div>`);
+ return h}
+function canjear(){const b=bal(ME.id),mine=RED.filter(r=>r.member_id==ME.id),ws=RW.filter(r=>r.active);
+ let h=`<div class="c r sp"><span class="mu">Puntos disponibles este mes</span><b style="font-size:24px">${b}</b></div><h2>Menú de premios</h2>`;
+ if(!ws.length)h+='<div class="c mu">El administrador aún no ha creado premios.</div>';
+ ws.forEach(r=>h+=`<div class="c r"><div class="g"><div class="b">${KI[r.kind]||'⭐'} ${esc(r.name)}</div><div class="mu">${r.cost} pts${r.amount?' · L'+r.amount:''}${r.monthly_limit?' · máx. '+r.monthly_limit+' al mes':''}</div></div>${b>=r.cost?`<button onclick="A.redeem('${r.id}')">Canjear</button>`:`<span class="mu">Faltan ${r.cost-b}</span>`}</div>`);
+ if(mine.length)h+='<h2>Mis canjes</h2>';
+ mine.forEach(r=>h+=`<div class="c r sp"><div class="g"><div class="b">${esc(r.reward_name)}</div><div class="mu">${new Date(r.created_at).toLocaleDateString()} · ${r.cost} pts</div></div>${rdT(r.status)}</div>`);
+ return h}
+function aprobar(){const P=SUB.filter(s=>s.status=='pending'&&s.member_id!=ME.id);
+ let h=`<h2>Por aprobar (${P.length})</h2><div class="mu">Los puntos cuentan en el mes en que se aprueban; conviene aprobar antes del cierre del mes.</div>`;if(!P.length)h+='<div class="c mu">Nada pendiente 🎉</div>';
+ P.forEach(s=>h+=`<div class="c"><div class="b">${esc(mem(s.member_id).name)} · ${esc(s.kind=='task'?s.name:'Landing: '+s.name)}</div><div class="mu">${new Date(s.created_at).toLocaleString()} · ${s.points} pts${s.kind=='landing'?' · L'+s.lempiras:''}</div>${s.body?`<div>${esc(s.body)}</div>`:''}<img class="ph" data-p="${s.company_id}/${s.id}.jpg">
+  <div class="w" style="margin-top:8px"><button class="ok" onclick="A.dec('${s.id}',1)">Aprobar</button><button class="no" onclick="A.dec('${s.id}',0)">Rechazar</button></div></div>`);
+ return h}
+function admin(){
+ const P=RED.filter(r=>r.status=='pending'),O=RED.filter(r=>r.status!='pending').slice(0,10);
+ let h=`<h2>Canjes por entregar (${P.length})</h2>`;if(!P.length)h+='<div class="c mu">Ningún canje pendiente.</div>';
+ P.forEach(r=>h+=`<div class="c"><div class="b">${esc(mem(r.member_id).name)} · ${esc(r.reward_name)}</div><div class="mu">${new Date(r.created_at).toLocaleString()} · ${r.cost} pts${r.amount?' · L'+r.amount:''}</div><div class="w" style="margin-top:8px"><button class="ok" onclick="A.rd('${r.id}',1)">Entregado</button><button class="no" onclick="A.rd('${r.id}',0)">Rechazar</button></div></div>`);
+ if(O.length){h+='<h2>Últimos canjes</h2>';O.forEach(r=>h+=`<div class="c r sp"><div class="g"><div class="b">${esc(mem(r.member_id).name)} · ${esc(r.reward_name)}</div><div class="mu">${new Date(r.created_at).toLocaleDateString()} · ${r.cost} pts</div></div>${rdT(r.status)}</div>`)}
+ h+='<h2>Menú de premios</h2>';
+ RW.forEach(r=>h+=`<div class="c"><div class="r"><input value="${esc(r.name)}" onchange="A.up('rewards','${r.id}',{name:this.value})"><button class="s" onclick="A.del('rewards','${r.id}')">✕</button></div>
+  <div class="w">${F('Costo (pts)',`<input type="number" value="${r.cost}" onchange="A.up('rewards','${r.id}',{cost:parseInt(this.value)||1})">`)}${F('Valor (L)',`<input type="number" value="${r.amount}" onchange="A.up('rewards','${r.id}',{amount:parseInt(this.value)||0})">`)}${F('Límite/mes',`<input type="number" value="${r.monthly_limit??''}" placeholder="—" onchange="A.up('rewards','${r.id}',{monthly_limit:this.value===''?null:parseInt(this.value)})">`)}</div>
+  <select onchange="A.up('rewards','${r.id}',{active:this.value=='1'})"><option value="1" ${r.active?'selected':''}>Visible en el menú</option><option value="0" ${r.active?'':'selected'}>Oculto</option></select></div>`);
+ h+=`<div class="c"><div class="b">Nuevo premio</div><input id="rn" placeholder="Nombre del premio"><select id="rk"><option value="dinero">💵 Dinero</option><option value="tiempo">🕒 Tiempo libre</option><option value="regalo">🎁 Regalo</option><option value="otro">⭐ Otro</option></select>
+  <div class="w">${F('Costo (pts)','<input id="rc" type="number" placeholder="500">')}${F('Valor (L)','<input id="ra" type="number" placeholder="0">')}${F('Límite/mes','<input id="rl" type="number" placeholder="—">')}</div><button onclick="A.addR()">Agregar al menú</button></div>`;
+ h+=`<h2>Empresa</h2><div class="c"><div class="mu">Código de la empresa (compártalo solo con sus colaboradores)</div><div class="b" style="font-size:20px">${esc(CO.code)}</div>
+  <div class="w" style="margin-top:8px">${F('Pts por landing',`<input type="number" value="${CO.landing_pts}" onchange="A.up('companies','${CO.id}',{landing_pts:parseInt(this.value)||0})">`)}${F('Lempiras por landing',`<input type="number" value="${CO.landing_lempiras}" onchange="A.up('companies','${CO.id}',{landing_lempiras:parseInt(this.value)||0})">`)}</div></div><h2>Miembros</h2>`;
+ MB.forEach(m=>h+=`<div class="c"><div class="r sp"><b>${esc(m.name)}</b>${m.user_id==U.id?'<span class="mu">(usted)</span>':`<button class="s" onclick="A.delM('${m.id}')">Quitar</button>`}</div>
+  <div class="w">${m.user_id==U.id?`<div class="mu" style="align-self:center">${RL[m.role]}</div>`:`<select onchange="A.up('members','${m.id}',{role:this.value})">${Object.keys(RL).map(k=>`<option value="${k}" ${m.role==k?'selected':''}>${RL[k]}</option>`).join('')}</select>`}<input placeholder="Equipo o área" value="${esc(m.team)}" onchange="A.up('members','${m.id}',{team:this.value.trim()})"></div>
+  ${m.role=='member'?`<div class="mu">Disponibles: ${bal(m.id)} pts</div>`:''}</div>`);
+ h+='<h2>Actividades</h2>';TK.forEach(t=>h+=`<div class="c r sp"><span class="g">${esc(t.name)} <span class="mu">${FN[t.freq]}</span></span><input style="width:70px" type="number" value="${t.points}" onchange="A.up('tasks','${t.id}',{points:parseInt(this.value)||1})"><button class="s" onclick="A.del('tasks','${t.id}')">✕</button></div>`);
+ h+=`<div class="c"><input id="tn" placeholder="Nueva actividad"><div class="w"><select id="tf"><option value="d">Diaria</option><option value="w">Semanal</option><option value="m">Mensual</option></select><input id="tp" type="number" placeholder="Puntos"></div><button onclick="A.addT()">Agregar actividad</button></div>`;
+ return h}
+function hist(){
+ const mo=mk(Date.now()),ms=new Set([mo]),key=x=>{const[a,b]=x.split('-');return a*12+ +b};
+ SUB.filter(s=>s.status=='approved').forEach(s=>ms.add(dm(s)));RED.forEach(r=>ms.add(mk(r.created_at)));
+ let h='<div class="c mu">Los puntos disponibles se reinician cada día 1. Aquí queda guardado el resultado de cada mes.</div>';
+ [...ms].sort((a,b)=>key(b)-key(a)).forEach(m=>{
+  const st=staff(),rk=st.map(x=>[x,mon(x.id,m)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]),acts=SUB.filter(s=>s.status=='approved'&&dm(s)==m),ld=acts.filter(s=>s.kind=='landing'),dl=RED.filter(r=>r.status=='delivered'&&mk(r.decided_at||r.created_at)==m),[y,n]=m.split('-');
+  h+=`<h2>${MS[n-1]} ${y}${m==mo?' · mes actual':''}</h2><div class="c">`;
+  if(!rk.length)h+='<div class="mu">Sin puntos aprobados este mes.</div>';
+  rk.forEach((x,i)=>h+=`<div class="r sp" style="padding:3px 0"><span>${m!=mo&&i==0?'🏆':['🥇','🥈','🥉'][i]||'·'} ${esc(x[0].name)}${x[0].id==ME.id?' <span class="mu">(usted)</span>':''}</span><b>${x[1]} pts</b></div>`);
+  const tm={};rk.forEach(x=>{const t=(x[0].team||'').trim();if(t)tm[t]=(tm[t]||0)+x[1]});const te=Object.entries(tm).sort((a,b)=>b[1]-a[1]);
+  if(te.length)h+=`<div class="mu" style="margin-top:8px">Equipos: ${te.map(x=>esc(x[0])+' '+x[1]).join(' · ')}</div>`;
+  h+=`<div class="mu" style="margin-top:8px">Actividades aprobadas: ${acts.length} · Landings: ${ld.length} (L${ld.reduce((a,s)=>a+s.lempiras,0)})${dl.length?` · Canjes entregados: ${dl.length} (${dl.reduce((a,r)=>a+r.cost,0)} pts${dl.some(r=>r.amount)?' · L'+dl.reduce((a,r)=>a+r.amount,0):''})`:''}</div></div>`});
+ return h}
+function R(force){
+ if(!force&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){PEND=1;return}
+ PEND=0;const nv=$('#nv');
+ if(!U){$('#v').innerHTML=login();nv.innerHTML='';$('#hd').innerHTML='';return}
+ if(!ME||!CO){$('#v').innerHTML='<div class="c">Su cuenta aún no pertenece a ninguna empresa.<br><br><button onclick="A.out()">Salir</button></div>';nv.innerHTML='';return}
+ const tabs=TABS[ME.role]||TABS.member;if(!tabs.some(x=>x[0]==T))T='h';
+ $('#hd').innerHTML=`<span class="mu">${esc(ME.name)} </span><button class="s" style="padding:5px 9px;font-size:12px" onclick="A.out()">Salir</button>`;
+ $('#v').innerHTML={h:home,t:tasks,l:landings,c:canjear,a:aprobar,m:admin,r:hist}[T]();
+ const pa=SUB.filter(s=>s.status=='pending'&&s.member_id!=ME.id).length,pm=RED.filter(r=>r.status=='pending').length;
+ nv.innerHTML=tabs.map(x=>{const n=x[0]=='a'?pa:x[0]=='m'?pm:0;return`<button class="${T==x[0]?'on':''}" onclick="A.tab('${x[0]}')"><i>${x[1]}</i>${x[2]}${n?' ('+n+')':''}</button>`}).join('');
+ document.querySelectorAll('img[data-p]').forEach(async i=>{const p=i.dataset.p;if(!URLS[p]){const r=await sb.storage.from('evidence').createSignedUrl(p,3600);URLS[p]=r.data?r.data.signedUrl:''}i.src=URLS[p]})}
+document.addEventListener('focusout',()=>setTimeout(()=>{if(PEND&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))R()},150));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&U)load()});
+setInterval(()=>{if(U&&!BUSY)load()},25000);
+load();
+</script></body></html>
